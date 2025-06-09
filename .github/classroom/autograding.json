@@ -1,0 +1,84 @@
+{
+  "tests": [
+    {
+      "name": "test_read_data",
+      "setup": "",
+      "run": "python3 auto_grader.py test_read_data",
+      "input": "test_read_data",
+      "output": "1",
+      "comparison": "exact",
+      "timeout": 10,
+      "points": 10
+    },
+    {
+      "name": "test_vocab",
+      "setup": "",
+      "run": "python3 auto_grader.py test_vocab",
+      "input": "test_vocab",
+      "output": "1",
+      "comparison": "exact",
+      "timeout": 10,
+      "points": 10
+    },
+    {
+      "name": "test_count_oov",
+      "setup": "",
+      "run": "python3 auto_grader.py test_count_oov",
+      "input": "test_count_oov",
+      "output": "1",
+      "comparison": "exact",
+      "timeout": 10,
+      "points": 10
+    },
+    {
+      "name": "test_prepare_data_loader",
+      "setup": "",
+      "run": "python3 auto_grader.py test_prepare_data_loader",
+      "input": "test_prepare_data_loader",
+      "output": "1",
+      "comparison": "exact",
+      "timeout": 10,
+      "points": 10
+    },
+    {
+      "name": "test_NERNet",
+      "setup": "",
+      "run": "python3 auto_grader.py test_NERNet",
+      "input": "test_NERNet",
+      "output": "2",
+      "comparison": "exact",
+      "timeout": 10,
+      "points": 20
+    },
+    {
+      "name": "test_NERNet",
+      "setup": "",
+      "run": "python3 auto_grader.py test_NERNet",
+      "input": "test_NERNet",
+      "output": "1",
+      "comparison": "exact",
+      "timeout": 10,
+      "points": 40
+    },
+    {
+      "name": "test_glove",
+      "setup": "",
+      "run": "python3 auto_grader.py test_glove",
+      "input": "test_glove",
+      "output": "2",
+      "comparison": "exact",
+      "timeout": 10,
+      "points": 15
+    },
+    {
+      "name": "test_glove",
+      "setup": "",
+      "run": "python3 auto_grader.py test_glove",
+      "input": "test_glove",
+      "output": "1",
+      "comparison": "exact",
+      "timeout": 10,
+      "points": 20
+    }
+  ]
+}
