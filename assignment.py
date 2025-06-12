@@ -44,7 +44,7 @@ th.cuda.manual_seed(SEED)
 
 # Set up the device
 # TO DO ----------------------------------------------------------------------
-DEVICE = "mps"
+DEVICE = "mps" if th.backends.mps.is_available() else "cpu"
 # TO DO ----------------------------------------------------------------------
 #assert DEVICE == "cuda"
 
@@ -215,7 +215,7 @@ class NERNet(nn.Module):
         # TO DO ----------------------------------------------------------------------
         self.embedding = nn.Embedding(input_size, embedding_size)
         self.lstm = nn.LSTM(embedding_size, hidden_size, num_layers=n_layers, bidirectional=directions == 2, batch_first=True)
-        self.fc = nn.Linear(hidden_size, output_size)
+        self.fc = nn.Linear(hidden_size*directions, output_size)
         self.dropout = nn.Dropout(0.5)
         self.init_weights()
 
