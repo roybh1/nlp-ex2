@@ -295,44 +295,72 @@ def train_loop(model: NERNet, n_epochs: int, dataloader_train, dataloader_dev):
     return metrics
 
 def evaluate(model: NERNet, title: str, dataloader: DataLoader, vocab: Vocab):
-    """Print the `Recall`, `Precision`, and `F1` scores in a tabulated format.
     """
-    results = {}
+    Write an evaluation loop for a trained model using the dev and test datasets. This function will print the `Recall`, `Precision`, and `F1` scores and plot a `Confusion Matrix`.
+    Perform this evaluation twice:
+    1. For all labels (7 labels in total).
+    2. For all labels except "O" (6 labels in total).
+    :param model: the trained model
+    :param title: the title of the model
+    :param dataloader: the dataloader
+    :param vocab: the vocabulary
+    :return: the results
+    """
     model.eval()
     all_preds = []
     all_labels = []
-    results["title"] = title	
-    pad_tag_id = vocab.tag2id.get("<PAD>", vocab.tag2id.get("O", 0))
-
+    
     with th.no_grad():
         for batch in dataloader:
             inputs, labels = batch
             inputs = inputs.to(DEVICE)
             labels = labels.to(DEVICE)
+            
             outputs = model(inputs)
-            preds = outputs.argmax(dim=2)  # shape: (B, T)
-
+            preds = outputs.argmax(dim=2)
+            
             all_preds.extend(preds.cpu().numpy().flatten())
             all_labels.extend(labels.cpu().numpy().flatten())
-
-    # calculate
-    precision, recall, f1, _ = precision_recall_fscore_support(
-        all_labels, all_preds, average='weighted', zero_division=1
-    )
-    results['precision'] = precision
-    results['recall'] = recall
-    results['f1'] = f1
     
-    preds_wo_o = [pred for pred in all_preds if pred != pad_tag_id]
-    labels_wo_o = [label for label in all_labels if label != pad_tag_id]
+    # Convert to numpy arrays
+    all_preds = np.array(all_preds)
+    all_labels = np.array(all_labels)
     
-    # precision_wo_o, recall_wo_o, f1_wo_o, _ = precision_recall_fscore_support(
-    #     labels_wo_o, preds_wo_o, average='weighted', zero_division=1
-    # )
-    results['precision_wo_o'] = 0
-    results['recall_wo_o'] = 0
-    results['f1_wo_o'] = 0
-    return results
+    # Calculate metrics for all labels
+    precision, recall, f1, _ = precision_recall_fscore_support(all_labels, all_preds, average='weighted')
+    
+    # Calculate metrics excluding 'O' label (assuming 'O' is label 0)
+    mask = all_labels != 0
+    precision_wo_o, recall_wo_o, f1_wo_o, _ = precision_recall_fscore_support(all_labels[mask], all_preds[mask], average='weighted')
+    
+    # Plot confusion matrix
+    plt.figure(figsize=(10, 8))
+    cm = confusion_matrix(all_labels, all_preds)
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
+    plt.title(f'Confusion Matrix - {title}')
+    plt.xlabel('Predicted')
+    plt.ylabel('True')
+    plt.show()
+    
+    # Print results
+    print(f"\nResults for {title}:")
+    print(f"All labels:")
+    print(f"Precision: {precision:.4f}")
+    print(f"Recall: {recall:.4f}")
+    print(f"F1 Score: {f1:.4f}")
+    print(f"\nExcluding 'O' label:")
+    print(f"Precision: {precision_wo_o:.4f}")
+    print(f"Recall: {recall_wo_o:.4f}")
+    print(f"F1 Score: {f1_wo_o:.4f}")
+    
+    return {
+        'precision': precision,
+        'recall': recall,
+        'f1': f1,
+        'precision_wo_o': precision_wo_o,
+        'recall_wo_o': recall_wo_o,
+        'f1_wo_o': f1_wo_o
+    }
 
 def evaluate_model(vocab: Vocab):
     EMB_DIM = 300
@@ -377,6 +405,9 @@ def evaluate_model(vocab: Vocab):
             'F1_WO_O': eval_result['f1_wo_o'],
         }
         results_test.append(summary)
+    df = pd.DataFrame(results_test, columns=columns)
+    df.to_csv(file_name, index=False)
+    print(tabulate(df, headers='keys', tablefmt='psql',floatfmt=".4f"))
 
 train = read_data("data/train.txt")
 dev = read_data("data/dev.txt")
