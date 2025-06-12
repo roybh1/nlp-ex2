@@ -333,14 +333,7 @@ def evaluate(model: NERNet, title: str, dataloader: DataLoader, vocab: Vocab):
     mask = all_labels != 0
     precision_wo_o, recall_wo_o, f1_wo_o, _ = precision_recall_fscore_support(all_labels[mask], all_preds[mask], average='weighted')
     
-    # Plot confusion matrix
-    plt.figure(figsize=(10, 8))
-    cm = confusion_matrix(all_labels, all_preds)
-    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
-    plt.title(f'Confusion Matrix - {title}')
-    plt.xlabel('Predicted')
-    plt.ylabel('True')
-    plt.show()
+
     
     # Print results
     print(f"\nResults for {title}:")
@@ -370,9 +363,9 @@ def evaluate_model(vocab: Vocab):
     # TO DO ----------------------------------------------------------------------
     models = {
         'Model1': {'embedding_size': EMB_DIM, 'hidden_size': 500, 'n_layers': 1, 'directions': 1},
-        # 'Model2': {'embedding_size': EMB_DIM, 'hidden_size': 500, 'n_layers': 2, 'directions': 1},
-        # 'Model3': {'embedding_size': EMB_DIM, 'hidden_size': 500, 'n_layers': 3, 'directions': 1},
-        # 'Model4': {'embedding_size': EMB_DIM, 'hidden_size': 500, 'n_layers': 1, 'directions': 2},
+        'Model2': {'embedding_size': EMB_DIM, 'hidden_size': 500, 'n_layers': 2, 'directions': 1},
+        'Model3': {'embedding_size': EMB_DIM, 'hidden_size': 500, 'n_layers': 3, 'directions': 1},
+        'Model4': {'embedding_size': EMB_DIM, 'hidden_size': 500, 'n_layers': 1, 'directions': 2},
         # 'Model5': {'embedding_size': EMB_DIM, 'hidden_size': 500, 'n_layers': 2, 'directions': 2},
         # 'Model6': {'embedding_size': EMB_DIM, 'hidden_size': 500, 'n_layers': 3, 'directions': 2},
         # 'Model7': {'embedding_size': EMB_DIM, 'hidden_size': 800, 'n_layers': 1, 'directions': 2},
