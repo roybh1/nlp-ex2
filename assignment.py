@@ -366,11 +366,11 @@ def evaluate_model(vocab: Vocab):
         'Model2': {'embedding_size': EMB_DIM, 'hidden_size': 500, 'n_layers': 2, 'directions': 1},
         'Model3': {'embedding_size': EMB_DIM, 'hidden_size': 500, 'n_layers': 3, 'directions': 1},
         'Model4': {'embedding_size': EMB_DIM, 'hidden_size': 500, 'n_layers': 1, 'directions': 2},
-        # 'Model5': {'embedding_size': EMB_DIM, 'hidden_size': 500, 'n_layers': 2, 'directions': 2},
-        # 'Model6': {'embedding_size': EMB_DIM, 'hidden_size': 500, 'n_layers': 3, 'directions': 2},
-        # 'Model7': {'embedding_size': EMB_DIM, 'hidden_size': 800, 'n_layers': 1, 'directions': 2},
-        # 'Model8': {'embedding_size': EMB_DIM, 'hidden_size': 800, 'n_layers': 2, 'directions': 2},
-        # 'Model9': {'embedding_size': EMB_DIM, 'hidden_size': 800, 'n_layers': 3, 'directions': 2},
+        'Model5': {'embedding_size': EMB_DIM, 'hidden_size': 500, 'n_layers': 2, 'directions': 2},
+        'Model6': {'embedding_size': EMB_DIM, 'hidden_size': 500, 'n_layers': 3, 'directions': 2},
+        'Model7': {'embedding_size': EMB_DIM, 'hidden_size': 800, 'n_layers': 1, 'directions': 2},
+        'Model8': {'embedding_size': EMB_DIM, 'hidden_size': 800, 'n_layers': 2, 'directions': 2},
+        'Model9': {'embedding_size': EMB_DIM, 'hidden_size': 800, 'n_layers': 3, 'directions': 2},
     }
 
     # TO DO ----------------------------------------------------------------------
@@ -390,11 +390,11 @@ def evaluate_model(vocab: Vocab):
             'HIDDEN_SIZE': model_params['hidden_size'],
             'N_LAYERS': model_params['n_layers'],
             'DIRECTIONS': model_params['directions'],
-            'PRECISION': eval_result['precision'],
+            'PERCISION': eval_result['precision'],
             'RECALL': eval_result['recall'],
             'F1': eval_result['f1'],
             'RECALL_WO_O': eval_result['recall_wo_o'],
-            'PRECISION_WO_O': eval_result['precision_wo_o'],
+            'PERCISION_WO_O': eval_result['precision_wo_o'],
             'F1_WO_O': eval_result['f1_wo_o'],
         }
         results_test.append(summary)
