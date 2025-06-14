@@ -294,17 +294,6 @@ def train_loop(model: NERNet, n_epochs: int, dataloader_train, dataloader_dev):
     return metrics
 
 def evaluate(model: NERNet, title: str, dataloader: DataLoader, vocab: Vocab):
-    """
-    Write an evaluation loop for a trained model using the dev and test datasets. This function will print the `Recall`, `Precision`, and `F1` scores and plot a `Confusion Matrix`.
-    Perform this evaluation twice:
-    1. For all labels (7 labels in total).
-    2. For all labels except "O" (6 labels in total).
-    :param model: the trained model
-    :param title: the title of the model
-    :param dataloader: the dataloader
-    :param vocab: the vocabulary
-    :return: the results
-    """
     model.eval()
     all_preds = []
     all_labels = []
@@ -316,7 +305,13 @@ def evaluate(model: NERNet, title: str, dataloader: DataLoader, vocab: Vocab):
             labels = labels.to(DEVICE)
             
             outputs = model(inputs)
-            preds = outputs.argmax(dim=2)
+            preds = outputs.argmax(dim=2)  # shape (B, T)
+            # Remove padding tokens
+            non_pad_mask = inputs.cpu().numpy() != PAD_TOKEN
+
+            preds = preds[non_pad_mask]
+            labels = labels[non_pad_mask]
+            
             all_preds.extend(preds.cpu().numpy().flatten())
             all_labels.extend(labels.cpu().numpy().flatten())
     
@@ -327,24 +322,11 @@ def evaluate(model: NERNet, title: str, dataloader: DataLoader, vocab: Vocab):
     # Calculate metrics for all labels
     precision, recall, f1, _ = precision_recall_fscore_support(all_labels, all_preds, average='weighted')
     
-    # Calculate metrics excluding 'O' label (assuming 'O' is label 1)
     non_1_mask = [label != 1 for label in all_labels]
     all_labels_wo_o = [label for label, mask in zip(all_labels, non_1_mask) if mask]
     all_preds_wo_o = [pred for pred, mask in zip(all_preds, non_1_mask) if mask]
     precision_wo_o, recall_wo_o, f1_wo_o, _ = precision_recall_fscore_support(all_labels_wo_o, all_preds_wo_o,average='weighted')
     
-
-    
-    # Print results
-    print(f"\nResults for {title}:")
-    print(f"All labels:")
-    print(f"Precision: {precision:.4f}")
-    print(f"Recall: {recall:.4f}")
-    print(f"F1 Score: {f1:.4f}")
-    print(f"\nExcluding 'O' label:")
-    print(f"Precision: {precision_wo_o:.4f}")
-    print(f"Recall: {recall_wo_o:.4f}")
-    print(f"F1 Score: {f1_wo_o:.4f}")
     
     return {
         'precision': precision,
@@ -425,5 +407,6 @@ columns = ['N_MODEL','HIDDEN_SIZE','N_LAYERS','DIRECTIONS','RECALL','PERCISION',
 model = NERNet(vocab.n_words, embedding_size=300, hidden_size=800, output_size=vocab.n_tags, n_layers=2, directions=1)
 model.to(DEVICE)
 train_loop(model, n_epochs=5, dataloader_train=dl_train,dataloader_dev=dl_dev)
+evaluate_model(vocab)
 
 # evaluate(model, "Model1", dl_test, vocab)
