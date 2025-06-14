@@ -240,6 +240,8 @@ class NERNet(nn.Module):
 
 
 
+
+
 def train_loop(model: NERNet, n_epochs: int, dataloader_train, dataloader_dev):
     """
     Train a model.
@@ -251,7 +253,7 @@ def train_loop(model: NERNet, n_epochs: int, dataloader_train, dataloader_dev):
     """
     # Optimizer (ADAM is a fancy version of SGD)
     optimizer = Adam(model.parameters(), lr=0.0001)
-    loss_fn = nn.CrossEntropyLoss(ignore_index=0)
+    loss_fn = nn.CrossEntropyLoss(ignore_index=PAD_TOKEN)
     # Record
     metrics = {'loss': {'train': [], 'dev': []}, 'accuracy': {'train': [], 'dev': []}}
 
@@ -273,13 +275,15 @@ def train_loop(model: NERNet, n_epochs: int, dataloader_train, dataloader_dev):
             labels = labels.to(DEVICE)
             optimizer.zero_grad()	
             outputs = model(inputs)
-            loss = loss_fn(outputs, labels)
+            preds = outputs.argmax(dim=2)  # shape (B, T)
+            labels_flat = labels.view(-1) 
+            outputs_flat = outputs.view(-1, outputs.shape[-1])
+            loss = loss_fn(outputs_flat, labels_flat)
             loss.backward()
             optimizer.step()
             total_loss += loss.item()
-            preds = outputs.argmax(dim=2)  # shape (B, T)
             total_correct += (preds == labels).sum().item()
-            total_samples += labels.size(0)
+            total_samples += labels.size(1) * labels.size(0)
             all_preds.extend(outputs.argmax(dim=1).cpu().numpy())
             all_labels.extend(labels.cpu().numpy())
     # TO DO ----------------------------------------------------------------------
