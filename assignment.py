@@ -87,8 +87,8 @@ def read_data(filepath:str) -> DataType:
 
 
 # Initinize ids for special tokens
-PAD_TOKEN = -1
-UNK_TOKEN = -2
+PAD_TOKEN = 0
+UNK_TOKEN = 1
 
 class Vocab:
     def __init__(self, train: DataType):
@@ -213,10 +213,10 @@ class NERNet(nn.Module):
         """
         super(NERNet, self).__init__()
         # TO DO ----------------------------------------------------------------------
-        self.embedding = nn.Embedding(input_size, embedding_size)
+        self.embedding = nn.Embedding(input_size, embedding_size,padding_idx=0)
         self.lstm = nn.LSTM(embedding_size, hidden_size, num_layers=n_layers, bidirectional=directions == 2, batch_first=True)
         self.fc = nn.Linear(hidden_size*directions, output_size)
-        self.dropout = nn.Dropout(0.5)
+        self.softmax = nn.LogSoftmax(dim=2)
         self.init_weights()
 
     def init_weights(self):
@@ -228,17 +228,14 @@ class NERNet(nn.Module):
         # TO DO ----------------------------------------------------------------------
 
     def forward(self, input_sentence):
-        # TO DO ----------------------------------------------------------------------
         # input_sentence: (batch_size, seq_len)
-        
         embed = self.embedding(input_sentence)
-        embed = self.dropout(embed)
         lstm_out, _ = self.lstm(embed)
         output = self.fc(lstm_out)
-        output = output.view(output.shape[0], -1, output.shape[2])
-
-        # TO DO ----------------------------------------------------------------------
+        # Apply softmax across the output classes (dimension 2)
+        output = self.softmax(output)
         return output
+
 
 
 
@@ -254,7 +251,7 @@ def train_loop(model: NERNet, n_epochs: int, dataloader_train, dataloader_dev):
     """
     # Optimizer (ADAM is a fancy version of SGD)
     optimizer = Adam(model.parameters(), lr=0.0001)
-    loss_fn = nn.CrossEntropyLoss(ignore_index=-1 )
+    loss_fn = nn.CrossEntropyLoss(ignore_index=0)
     # Record
     metrics = {'loss': {'train': [], 'dev': []}, 'accuracy': {'train': [], 'dev': []}}
 
@@ -276,9 +273,7 @@ def train_loop(model: NERNet, n_epochs: int, dataloader_train, dataloader_dev):
             labels = labels.to(DEVICE)
             optimizer.zero_grad()	
             outputs = model(inputs)
-            outputs_flat = outputs.view(-1, outputs.shape[2])
-            labels_flat = labels.view(-1) 
-            loss = loss_fn(outputs_flat, labels_flat)
+            loss = loss_fn(outputs, labels)
             loss.backward()
             optimizer.step()
             total_loss += loss.item()
@@ -318,20 +313,21 @@ def evaluate(model: NERNet, title: str, dataloader: DataLoader, vocab: Vocab):
             
             outputs = model(inputs)
             preds = outputs.argmax(dim=2)
-            
             all_preds.extend(preds.cpu().numpy().flatten())
             all_labels.extend(labels.cpu().numpy().flatten())
     
     # Convert to numpy arrays
-    all_preds = np.array(all_preds)
-    all_labels = np.array(all_labels)
+    all_preds = np.array(all_preds).tolist()
+    all_labels = np.array(all_labels).tolist()
     
     # Calculate metrics for all labels
     precision, recall, f1, _ = precision_recall_fscore_support(all_labels, all_preds, average='weighted')
     
-    # Calculate metrics excluding 'O' label (assuming 'O' is label 0)
-    mask = all_labels != 0
-    precision_wo_o, recall_wo_o, f1_wo_o, _ = precision_recall_fscore_support(all_labels[mask], all_preds[mask], average='weighted')
+    # Calculate metrics excluding 'O' label (assuming 'O' is label 1)
+    non_1_mask = [label != 1 for label in all_labels]
+    all_labels_wo_o = [label for label, mask in zip(all_labels, non_1_mask) if mask]
+    all_preds_wo_o = [pred for pred, mask in zip(all_preds, non_1_mask) if mask]
+    precision_wo_o, recall_wo_o, f1_wo_o, _ = precision_recall_fscore_support(all_labels_wo_o, all_preds_wo_o,average='weighted')
     
 
     
@@ -421,6 +417,9 @@ dl_test = prepare_data_loader(test_sequences, batch_size=BATCH_SIZE, train=False
 
 columns = ['N_MODEL','HIDDEN_SIZE','N_LAYERS','DIRECTIONS','RECALL','PERCISION','F1','RECALL_WO_O','PERCISION_WO_O','F1_WO_O']
 
-evaluate_model(vocab)
-# model = NERNet(vocab.n_words, embedding_size=300, hidden_size=800, output_size=vocab.n_tags, n_layers=2, directions=1)
-# model.to(DEVICE)
+# evaluate_model(vocab)
+model = NERNet(vocab.n_words, embedding_size=300, hidden_size=800, output_size=vocab.n_tags, n_layers=2, directions=1)
+model.to(DEVICE)
+train_loop(model, n_epochs=5, dataloader_train=dl_train,dataloader_dev=dl_dev)
+
+# evaluate(model, "Model1", dl_test, vocab)
