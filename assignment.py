@@ -395,7 +395,7 @@ test_sequences = prepare_data(test, vocab)
 data_loader_train = prepare_data_loader(train_sequences, batch_size=16)
 
 
-BATCH_SIZE = 16
+BATCH_SIZE = 1
 dl_train = prepare_data_loader(train_sequences, batch_size=BATCH_SIZE)
 dl_dev = prepare_data_loader(dev_sequences, batch_size=BATCH_SIZE, train=False)
 dl_test = prepare_data_loader(test_sequences, batch_size=BATCH_SIZE, train=False)
